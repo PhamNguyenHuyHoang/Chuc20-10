@@ -3,3 +3,7 @@ dist/
 .DS_Store
 Thumbs.db
 *.log
+/assets/photos/moment-06.jpg
+/assets/photos/moment-08.jpg
+/assets/photos/moment-11.jpg
+/assets/video/
