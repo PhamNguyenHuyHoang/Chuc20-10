@@ -1,0 +1,10 @@
+{
+  "name": "love-motion-gift",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "..\\huydev-portfolio\\node_modules\\.bin\\vite.cmd --host 127.0.0.1 --open"
+  }
+}
+
