@@ -69,29 +69,26 @@ const featurePhoto = document.querySelector('#featurePhoto');
 let photoIndex = 6;
 let photoChanging = false;
 
-function changePhoto() {
+function changePhoto(direction = 1) {
   if (!document.body.classList.contains('is-unlocked') || photoChanging) return;
   photoChanging = true;
-  photoStage.classList.add('is-changing');
+  const directionClass = direction < 0 ? 'is-changing-prev' : 'is-changing-next';
+  photoStage.classList.add('is-changing', directionClass);
   window.setTimeout(() => {
-    photoIndex = (photoIndex + 1) % photos.length;
+    photoIndex = (photoIndex + direction + photos.length) % photos.length;
     const [file, caption] = photos[photoIndex];
     featurePhoto.src = `assets/photos/${file}`;
     featurePhoto.alt = caption;
   }, 390);
   // Always release the transition lock, even when reduced-motion disables CSS animations.
   window.setTimeout(() => {
-    photoStage.classList.remove('is-changing');
+    photoStage.classList.remove('is-changing', 'is-changing-prev', 'is-changing-next');
     photoChanging = false;
   }, 850);
 }
 
-photoStage.addEventListener('click', changePhoto);
-photoStage.addEventListener('keydown', (event) => {
-  if (event.key === 'Enter' || event.key === ' ') {
-    event.preventDefault();
-    changePhoto();
-  }
+photoStage.querySelectorAll('.photo-control').forEach((control) => {
+  control.addEventListener('click', () => changePhoto(Number(control.dataset.direction)));
 });
 
 window.setInterval(changePhoto, 2000);
