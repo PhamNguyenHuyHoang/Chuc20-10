@@ -68,30 +68,64 @@ const photoStage = document.querySelector('#photoStage');
 const featurePhoto = document.querySelector('#featurePhoto');
 let photoIndex = 6;
 let photoChanging = false;
+let queuedPhotoDirection = 0;
+let photoChangeAutomatic = false;
+let photoSwapTimer;
+let photoReleaseTimer;
+let photoTimer;
 
-function changePhoto(direction = 1) {
-  if (!document.body.classList.contains('is-unlocked') || photoChanging) return;
+function changePhoto(direction = 1, automatic = false) {
+  if (!document.body.classList.contains('is-unlocked')) return;
+  if (photoChanging) {
+    if (automatic) return;
+    if (photoChangeAutomatic) {
+      window.clearTimeout(photoSwapTimer);
+      window.clearTimeout(photoReleaseTimer);
+      photoStage.classList.remove('is-changing', 'is-changing-prev', 'is-changing-next');
+      photoChanging = false;
+      queuedPhotoDirection = 0;
+    } else {
+      queuedPhotoDirection = direction;
+      return;
+    }
+  }
   photoChanging = true;
+  photoChangeAutomatic = automatic;
+  const currentFile = featurePhoto.getAttribute('src').split('/').pop();
+  const currentIndex = photos.findIndex(([file]) => file === currentFile);
+  if (currentIndex !== -1) photoIndex = currentIndex;
   const directionClass = direction < 0 ? 'is-changing-prev' : 'is-changing-next';
   photoStage.classList.add('is-changing', directionClass);
-  window.setTimeout(() => {
+  photoSwapTimer = window.setTimeout(() => {
     photoIndex = (photoIndex + direction + photos.length) % photos.length;
     const [file, caption] = photos[photoIndex];
     featurePhoto.src = `assets/photos/${file}`;
     featurePhoto.alt = caption;
   }, 390);
   // Always release the transition lock, even when reduced-motion disables CSS animations.
-  window.setTimeout(() => {
+  photoReleaseTimer = window.setTimeout(() => {
     photoStage.classList.remove('is-changing', 'is-changing-prev', 'is-changing-next');
     photoChanging = false;
+    photoChangeAutomatic = false;
+    if (queuedPhotoDirection !== 0) {
+      const nextDirection = queuedPhotoDirection;
+      queuedPhotoDirection = 0;
+      changePhoto(nextDirection);
+    }
   }, 850);
 }
 
-photoStage.querySelectorAll('.photo-control').forEach((control) => {
-  control.addEventListener('click', () => changePhoto(Number(control.dataset.direction)));
-});
+function restartPhotoTimer() {
+  window.clearInterval(photoTimer);
+  photoTimer = window.setInterval(() => changePhoto(1, true), 2000);
+}
 
-window.setInterval(changePhoto, 2000);
+photoStage.querySelectorAll('.photo-control').forEach((control) => {
+  control.addEventListener('click', () => {
+    changePhoto(Number(control.dataset.direction));
+    restartPhotoTimer();
+  });
+});
 
 const letterIntro = document.querySelector('#letterIntro');
 const enterLetter = document.querySelector('#enterLetter');
@@ -101,5 +135,6 @@ enterLetter.addEventListener('click', () => {
     letterIntro.hidden = true;
     document.body.classList.add('is-unlocked');
     photoStage.classList.add('is-open');
+    restartPhotoTimer();
   }, 430);
 });
