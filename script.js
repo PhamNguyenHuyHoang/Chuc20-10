@@ -67,19 +67,13 @@ const photos = [
 const photoStage = document.querySelector('#photoStage');
 const featurePhoto = document.querySelector('#featurePhoto');
 const photoCount = document.querySelector('#photoCount');
-const autoplayToggle = document.querySelector('#autoplayToggle');
-const autoplayIcon = autoplayToggle.querySelector('.button-icon');
-const autoplayLabel = autoplayToggle.querySelector('.button-label');
 const musicToggle = document.querySelector('#musicToggle');
 const bgMusic = document.querySelector('#bgMusic');
 let photoIndex = 6;
 let photoChanging = false;
 let queuedPhotoDirection = 0;
-let photoChangeAutomatic = false;
 let photoSwapTimer;
 let photoReleaseTimer;
-let photoTimer;
-let autoplayEnabled = true;
 
 function updatePhotoCounter() {
   photoCount.value = `${String(photoIndex + 1).padStart(2, '0')} / ${String(photos.length).padStart(2, '0')}`;
@@ -94,23 +88,13 @@ function preloadNearbyPhotos() {
   });
 }
 
-function changePhoto(direction = 1, automatic = false) {
+function changePhoto(direction = 1) {
   if (!document.body.classList.contains('is-unlocked')) return;
   if (photoChanging) {
-    if (automatic) return;
-    if (photoChangeAutomatic) {
-      window.clearTimeout(photoSwapTimer);
-      window.clearTimeout(photoReleaseTimer);
-      photoStage.classList.remove('is-changing', 'is-changing-prev', 'is-changing-next');
-      photoChanging = false;
-      queuedPhotoDirection = 0;
-    } else {
-      queuedPhotoDirection = direction;
-      return;
-    }
+    queuedPhotoDirection = direction;
+    return;
   }
   photoChanging = true;
-  photoChangeAutomatic = automatic;
   const currentFile = featurePhoto.getAttribute('src').split('/').pop();
   const currentIndex = photos.findIndex(([file]) => file === currentFile);
   if (currentIndex !== -1) photoIndex = currentIndex;
@@ -128,7 +112,6 @@ function changePhoto(direction = 1, automatic = false) {
   photoReleaseTimer = window.setTimeout(() => {
     photoStage.classList.remove('is-changing', 'is-changing-prev', 'is-changing-next');
     photoChanging = false;
-    photoChangeAutomatic = false;
     if (queuedPhotoDirection !== 0) {
       const nextDirection = queuedPhotoDirection;
       queuedPhotoDirection = 0;
@@ -137,26 +120,9 @@ function changePhoto(direction = 1, automatic = false) {
   }, 850);
 }
 
-function restartPhotoTimer() {
-  window.clearInterval(photoTimer);
-  photoTimer = window.setInterval(() => {
-    if (autoplayEnabled) changePhoto(1, true);
-  }, 2000);
-}
-
-autoplayToggle.addEventListener('click', () => {
-  autoplayEnabled = !autoplayEnabled;
-  autoplayToggle.setAttribute('aria-pressed', String(autoplayEnabled));
-  autoplayToggle.setAttribute('aria-label', autoplayEnabled ? 'Tạm dừng ảnh tự chuyển' : 'Tiếp tục ảnh tự chuyển');
-  autoplayIcon.textContent = autoplayEnabled ? 'Ⅱ' : '▶';
-  autoplayLabel.textContent = autoplayEnabled ? 'Tự chạy' : 'Đã dừng';
-  if (autoplayEnabled) restartPhotoTimer();
-});
-
 photoStage.querySelectorAll('.photo-control').forEach((control) => {
   control.addEventListener('click', () => {
     changePhoto(Number(control.dataset.direction));
-    restartPhotoTimer();
   });
 });
 
@@ -172,7 +138,6 @@ photoStage.addEventListener('pointerup', (event) => {
   swipeStart = null;
   if (Math.abs(deltaX) < 42 || Math.abs(deltaX) < Math.abs(deltaY)) return;
   changePhoto(deltaX < 0 ? 1 : -1);
-  restartPhotoTimer();
 });
 photoStage.addEventListener('pointercancel', () => { swipeStart = null; });
 
@@ -211,6 +176,5 @@ enterLetter.addEventListener('click', () => {
     letterIntro.hidden = true;
     document.body.classList.add('is-unlocked');
     photoStage.classList.add('is-open');
-    restartPhotoTimer();
   }, 430);
 });

@@ -205,7 +205,6 @@ body.is-unlocked .home-visual { animation:greeting-reveal .72s .1s both; }
 @media (max-width:360px) {
   .topbar { padding-inline:10px; }
   .brand { font-size:12px; }
-  #autoplayToggle .button-label { display:none; }
   .top-date { font-size:9px; }
 }
 
