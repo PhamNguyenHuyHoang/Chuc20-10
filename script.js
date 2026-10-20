@@ -71,8 +71,9 @@ const autoplayToggle = document.querySelector('#autoplayToggle');
 const autoplayIcon = autoplayToggle.querySelector('.button-icon');
 const autoplayLabel = autoplayToggle.querySelector('.button-label');
 const musicToggle = document.querySelector('#musicToggle');
-const musicIcon = musicToggle.querySelector('.button-icon');
-const musicLabel = musicToggle.querySelector('.button-label');
+const musicPanel = document.querySelector('#musicPanel');
+const zingPlayer = document.querySelector('#zingPlayer');
+const closeMusic = document.querySelector('#closeMusic');
 let photoIndex = 6;
 let photoChanging = false;
 let queuedPhotoDirection = 0;
@@ -177,53 +178,21 @@ photoStage.addEventListener('pointerup', (event) => {
 });
 photoStage.addEventListener('pointercancel', () => { swipeStart = null; });
 
-const melody = [261.63, 329.63, 392, 523.25, 392, 329.63, 293.66, 440];
-let audioContext;
-let musicEnabled = false;
-let musicTimer;
-let melodyIndex = 0;
-
-function playMelodyNote() {
-  if (!musicEnabled || !audioContext) return;
-  const startAt = audioContext.currentTime;
-  const note = audioContext.createOscillator();
-  const envelope = audioContext.createGain();
-  note.type = 'sine';
-  note.frequency.setValueAtTime(melody[melodyIndex], startAt);
-  envelope.gain.setValueAtTime(0.0001, startAt);
-  envelope.gain.exponentialRampToValueAtTime(0.022, startAt + 0.08);
-  envelope.gain.exponentialRampToValueAtTime(0.0001, startAt + 0.86);
-  note.connect(envelope);
-  envelope.connect(audioContext.destination);
-  note.start(startAt);
-  note.stop(startAt + 0.88);
-  melodyIndex = (melodyIndex + 1) % melody.length;
-  musicTimer = window.setTimeout(playMelodyNote, 720);
+function setMusicPanelOpen(open) {
+  musicPanel.hidden = !open;
+  musicToggle.setAttribute('aria-expanded', String(open));
+  musicToggle.setAttribute('aria-pressed', String(open));
+  musicToggle.setAttribute('aria-label', open ? 'Đóng trình phát Zing MP3' : 'Mở trình phát Zing MP3');
+  if (open) {
+    zingPlayer.src = zingPlayer.dataset.src;
+  } else {
+    // Removing the iframe source also stops playback when the panel is dismissed.
+    zingPlayer.removeAttribute('src');
+  }
 }
 
-musicToggle.addEventListener('click', async () => {
-  if (!audioContext) {
-    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-    if (!AudioContextClass) return;
-    audioContext = new AudioContextClass();
-  }
-  if (musicEnabled) {
-    musicEnabled = false;
-    window.clearTimeout(musicTimer);
-    musicIcon.textContent = '♫';
-    musicLabel.textContent = 'Nhạc';
-    musicToggle.setAttribute('aria-pressed', 'false');
-    musicToggle.setAttribute('aria-label', 'Bật nhạc nền');
-    return;
-  }
-  await audioContext.resume();
-  musicEnabled = true;
-  musicIcon.textContent = '♪';
-  musicLabel.textContent = 'Đang phát';
-  musicToggle.setAttribute('aria-pressed', 'true');
-  musicToggle.setAttribute('aria-label', 'Tắt nhạc nền');
-  playMelodyNote();
-});
+musicToggle.addEventListener('click', () => setMusicPanelOpen(musicPanel.hidden));
+closeMusic.addEventListener('click', () => setMusicPanelOpen(false));
 
 const letterIntro = document.querySelector('#letterIntro');
 const enterLetter = document.querySelector('#enterLetter');

@@ -18,7 +18,11 @@
     <a class="brand" href="#home"><span>♡</span> us, always</a>
     <div class="topbar-actions">
       <button class="topbar-button" id="autoplayToggle" type="button" aria-pressed="true" aria-label="Tạm dừng ảnh tự chuyển"><span class="button-icon" aria-hidden="true">Ⅱ</span><span class="button-label">Tự chạy</span></button>
-      <button class="topbar-button" id="musicToggle" type="button" aria-pressed="false" aria-label="Bật nhạc nền"><span class="button-icon" aria-hidden="true">♫</span><span class="button-label">Nhạc</span></button>
+      <button class="topbar-button" id="musicToggle" type="button" aria-pressed="false" aria-expanded="false" aria-controls="musicPanel" aria-label="Mở trình phát Zing MP3"><span class="button-icon" aria-hidden="true">♫</span><span class="button-label">Nhạc</span></button>
+      <section class="music-panel" id="musicPanel" aria-label="Trình phát nhạc" hidden>
+        <div class="music-panel-heading"><span>♪ Một bài hát dành cho em</span><button class="music-close" id="closeMusic" type="button" aria-label="Đóng trình phát">×</button></div>
+        <iframe id="zingPlayer" title="Trình phát Zing MP3" scrolling="no" width="640" height="180" data-src="https://zingmp3.vn/embed/song/kgmRTRLGio8n?start=false" frameborder="0" allow="autoplay; encrypted-media; fullscreen; picture-in-picture" allowfullscreen loading="lazy"></iframe>
+      </section>
       <span class="top-date">20 <i>·</i> 10 <span>♡</span></span>
     </div>
   </header>
