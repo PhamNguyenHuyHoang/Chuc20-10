@@ -71,9 +71,7 @@ const autoplayToggle = document.querySelector('#autoplayToggle');
 const autoplayIcon = autoplayToggle.querySelector('.button-icon');
 const autoplayLabel = autoplayToggle.querySelector('.button-label');
 const musicToggle = document.querySelector('#musicToggle');
-const musicPanel = document.querySelector('#musicPanel');
-const zingPlayer = document.querySelector('#zingPlayer');
-const closeMusic = document.querySelector('#closeMusic');
+const bgMusic = document.querySelector('#bgMusic');
 let photoIndex = 6;
 let photoChanging = false;
 let queuedPhotoDirection = 0;
@@ -178,21 +176,25 @@ photoStage.addEventListener('pointerup', (event) => {
 });
 photoStage.addEventListener('pointercancel', () => { swipeStart = null; });
 
-function setMusicPanelOpen(open) {
-  musicPanel.hidden = !open;
-  musicToggle.setAttribute('aria-expanded', String(open));
-  musicToggle.setAttribute('aria-pressed', String(open));
-  musicToggle.setAttribute('aria-label', open ? 'Đóng trình phát Zing MP3' : 'Mở trình phát Zing MP3');
-  if (open) {
-    zingPlayer.src = zingPlayer.dataset.src;
-  } else {
-    // Removing the iframe source also stops playback when the panel is dismissed.
-    zingPlayer.removeAttribute('src');
+musicToggle.addEventListener('click', async () => {
+  if (bgMusic.paused) {
+    try {
+      await bgMusic.play();
+      musicToggle.setAttribute('aria-pressed', 'true');
+      musicToggle.setAttribute('aria-label', 'Tắt nhạc nền');
+      musicToggle.querySelector('.button-icon').textContent = '♪';
+      musicToggle.querySelector('.button-label').textContent = 'Đang phát';
+    } catch {
+      musicToggle.setAttribute('aria-label', 'Không thể phát nhạc; thử bấm lại');
+    }
+    return;
   }
-}
-
-musicToggle.addEventListener('click', () => setMusicPanelOpen(musicPanel.hidden));
-closeMusic.addEventListener('click', () => setMusicPanelOpen(false));
+  bgMusic.pause();
+  musicToggle.setAttribute('aria-pressed', 'false');
+  musicToggle.setAttribute('aria-label', 'Phát bài nhạc nền');
+  musicToggle.querySelector('.button-icon').textContent = '♫';
+  musicToggle.querySelector('.button-label').textContent = 'Nhạc';
+});
 
 const letterIntro = document.querySelector('#letterIntro');
 const enterLetter = document.querySelector('#enterLetter');
