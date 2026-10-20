@@ -176,29 +176,36 @@ photoStage.addEventListener('pointerup', (event) => {
 });
 photoStage.addEventListener('pointercancel', () => { swipeStart = null; });
 
-musicToggle.addEventListener('click', async () => {
+function updateMusicButton(isPlaying) {
+  musicToggle.setAttribute('aria-pressed', String(isPlaying));
+  musicToggle.setAttribute('aria-label', isPlaying ? 'Dừng nhạc' : 'Tiếp tục nhạc');
+  musicToggle.querySelector('.button-icon').textContent = isPlaying ? 'Ⅱ' : '▶';
+  musicToggle.querySelector('.button-label').textContent = isPlaying ? 'Dừng' : 'Tiếp tục';
+}
+
+async function playBackgroundMusic() {
+  try {
+    await bgMusic.play();
+    updateMusicButton(true);
+  } catch {
+    updateMusicButton(false);
+  }
+}
+
+musicToggle.addEventListener('click', () => {
   if (bgMusic.paused) {
-    try {
-      await bgMusic.play();
-      musicToggle.setAttribute('aria-pressed', 'true');
-      musicToggle.setAttribute('aria-label', 'Tắt nhạc nền');
-      musicToggle.querySelector('.button-icon').textContent = '♪';
-      musicToggle.querySelector('.button-label').textContent = 'Đang phát';
-    } catch {
-      musicToggle.setAttribute('aria-label', 'Không thể phát nhạc; thử bấm lại');
-    }
+    playBackgroundMusic();
     return;
   }
   bgMusic.pause();
-  musicToggle.setAttribute('aria-pressed', 'false');
-  musicToggle.setAttribute('aria-label', 'Phát bài nhạc nền');
-  musicToggle.querySelector('.button-icon').textContent = '♫';
-  musicToggle.querySelector('.button-label').textContent = 'Nhạc';
+  updateMusicButton(false);
 });
 
 const letterIntro = document.querySelector('#letterIntro');
 const enterLetter = document.querySelector('#enterLetter');
 enterLetter.addEventListener('click', () => {
+  // Opening the envelope is a user gesture, allowing browsers to start the song.
+  playBackgroundMusic();
   letterIntro.classList.add('is-closing');
   window.setTimeout(() => {
     letterIntro.hidden = true;
