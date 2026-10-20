@@ -16,7 +16,11 @@
   <div class="sakura-burst-layer" id="sakuraBursts" aria-hidden="true"></div>
   <header class="topbar">
     <a class="brand" href="#home"><span>♡</span> us, always</a>
-    <span class="top-date">20 <i>·</i> 10 <span>♡</span></span>
+    <div class="topbar-actions">
+      <button class="topbar-button" id="autoplayToggle" type="button" aria-pressed="true" aria-label="Tạm dừng ảnh tự chuyển"><span class="button-icon" aria-hidden="true">Ⅱ</span><span class="button-label">Tự chạy</span></button>
+      <button class="topbar-button" id="musicToggle" type="button" aria-pressed="false" aria-label="Bật nhạc nền"><span class="button-icon" aria-hidden="true">♫</span><span class="button-label">Nhạc</span></button>
+      <span class="top-date">20 <i>·</i> 10 <span>♡</span></span>
+    </div>
   </header>
 
   <main>
@@ -30,8 +34,9 @@
       <div class="home-visual">
         <div class="orbit orbit-one"></div><div class="orbit orbit-two"></div>
         <figure class="photo-stage" id="photoStage" aria-label="Ảnh kỷ niệm chuyển động">
-          <img id="featurePhoto" src="assets/photos/moment-09.jpg" alt="Gương mặt anh thương" />
+          <img id="featurePhoto" src="assets/photos/moment-09.webp" alt="Gương mặt anh thương" decoding="async" fetchpriority="high" />
           <span class="photo-heart" aria-hidden="true">♡</span>
+          <output class="photo-count" id="photoCount" aria-live="polite">07 / 12</output>
           <button class="photo-control photo-control-prev" type="button" data-direction="-1" aria-label="Xem ảnh trước"><span aria-hidden="true">‹</span></button>
           <button class="photo-control photo-control-next" type="button" data-direction="1" aria-label="Xem ảnh tiếp theo"><span aria-hidden="true">›</span></button>
         </figure>

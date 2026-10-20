@@ -56,16 +56,23 @@ window.addEventListener('pointermove', (event) => {
 }, { passive: true });
 
 const photos = [
-  ['moment-01.jpg', 'Ngày mình đi trốn'], ['moment-02.jpg', 'Một buổi tối thật vui'],
-  ['moment-03.jpg', 'Ngày thật đáng nhớ'], ['moment-04.jpg', 'Nụ cười anh thích nhất'],
-  ['moment-05.jpg', 'Bình yên của anh'], ['moment-07.jpg', 'Một ngày bên nhau'],
-  ['moment-09.jpg', 'Gương mặt anh thương'], ['moment-10.jpg', 'Cô gái ngầu nhất'],
-  ['moment-12.jpg', 'Hai em bé đáng yêu'], ['moment-13.jpg', 'Cái ôm ấm áp'],
-  ['moment-14.jpg', 'Nàng thơ của anh'], ['moment-15.jpg', 'Em lúc nào cũng xinh'],
+  ['moment-01.webp', 'Ngày mình đi trốn'], ['moment-02.webp', 'Một buổi tối thật vui'],
+  ['moment-03.webp', 'Ngày thật đáng nhớ'], ['moment-04.webp', 'Nụ cười anh thích nhất'],
+  ['moment-05.webp', 'Bình yên của anh'], ['moment-07.webp', 'Một ngày bên nhau'],
+  ['moment-09.webp', 'Gương mặt anh thương'], ['moment-10.webp', 'Cô gái ngầu nhất'],
+  ['moment-12.webp', 'Hai em bé đáng yêu'], ['moment-13.webp', 'Cái ôm ấm áp'],
+  ['moment-14.webp', 'Nàng thơ của anh'], ['moment-15.webp', 'Em lúc nào cũng xinh'],
 ];
 
 const photoStage = document.querySelector('#photoStage');
 const featurePhoto = document.querySelector('#featurePhoto');
+const photoCount = document.querySelector('#photoCount');
+const autoplayToggle = document.querySelector('#autoplayToggle');
+const autoplayIcon = autoplayToggle.querySelector('.button-icon');
+const autoplayLabel = autoplayToggle.querySelector('.button-label');
+const musicToggle = document.querySelector('#musicToggle');
+const musicIcon = musicToggle.querySelector('.button-icon');
+const musicLabel = musicToggle.querySelector('.button-label');
 let photoIndex = 6;
 let photoChanging = false;
 let queuedPhotoDirection = 0;
@@ -73,6 +80,20 @@ let photoChangeAutomatic = false;
 let photoSwapTimer;
 let photoReleaseTimer;
 let photoTimer;
+let autoplayEnabled = true;
+
+function updatePhotoCounter() {
+  photoCount.value = `${String(photoIndex + 1).padStart(2, '0')} / ${String(photos.length).padStart(2, '0')}`;
+  photoCount.textContent = photoCount.value;
+}
+
+function preloadNearbyPhotos() {
+  [-1, 1].forEach((direction) => {
+    const neighborIndex = (photoIndex + direction + photos.length) % photos.length;
+    const image = new Image();
+    image.src = `assets/photos/${photos[neighborIndex][0]}`;
+  });
+}
 
 function changePhoto(direction = 1, automatic = false) {
   if (!document.body.classList.contains('is-unlocked')) return;
@@ -101,6 +122,8 @@ function changePhoto(direction = 1, automatic = false) {
     const [file, caption] = photos[photoIndex];
     featurePhoto.src = `assets/photos/${file}`;
     featurePhoto.alt = caption;
+    updatePhotoCounter();
+    preloadNearbyPhotos();
   }, 390);
   // Always release the transition lock, even when reduced-motion disables CSS animations.
   photoReleaseTimer = window.setTimeout(() => {
@@ -117,14 +140,89 @@ function changePhoto(direction = 1, automatic = false) {
 
 function restartPhotoTimer() {
   window.clearInterval(photoTimer);
-  photoTimer = window.setInterval(() => changePhoto(1, true), 2000);
+  photoTimer = window.setInterval(() => {
+    if (autoplayEnabled) changePhoto(1, true);
+  }, 2000);
 }
+
+autoplayToggle.addEventListener('click', () => {
+  autoplayEnabled = !autoplayEnabled;
+  autoplayToggle.setAttribute('aria-pressed', String(autoplayEnabled));
+  autoplayToggle.setAttribute('aria-label', autoplayEnabled ? 'Tạm dừng ảnh tự chuyển' : 'Tiếp tục ảnh tự chuyển');
+  autoplayIcon.textContent = autoplayEnabled ? 'Ⅱ' : '▶';
+  autoplayLabel.textContent = autoplayEnabled ? 'Tự chạy' : 'Đã dừng';
+  if (autoplayEnabled) restartPhotoTimer();
+});
 
 photoStage.querySelectorAll('.photo-control').forEach((control) => {
   control.addEventListener('click', () => {
     changePhoto(Number(control.dataset.direction));
     restartPhotoTimer();
   });
+});
+
+let swipeStart = null;
+photoStage.addEventListener('pointerdown', (event) => {
+  if (event.target.closest('button')) return;
+  swipeStart = { x: event.clientX, y: event.clientY, pointerId: event.pointerId };
+});
+photoStage.addEventListener('pointerup', (event) => {
+  if (!swipeStart || swipeStart.pointerId !== event.pointerId) return;
+  const deltaX = event.clientX - swipeStart.x;
+  const deltaY = event.clientY - swipeStart.y;
+  swipeStart = null;
+  if (Math.abs(deltaX) < 42 || Math.abs(deltaX) < Math.abs(deltaY)) return;
+  changePhoto(deltaX < 0 ? 1 : -1);
+  restartPhotoTimer();
+});
+photoStage.addEventListener('pointercancel', () => { swipeStart = null; });
+
+const melody = [261.63, 329.63, 392, 523.25, 392, 329.63, 293.66, 440];
+let audioContext;
+let musicEnabled = false;
+let musicTimer;
+let melodyIndex = 0;
+
+function playMelodyNote() {
+  if (!musicEnabled || !audioContext) return;
+  const startAt = audioContext.currentTime;
+  const note = audioContext.createOscillator();
+  const envelope = audioContext.createGain();
+  note.type = 'sine';
+  note.frequency.setValueAtTime(melody[melodyIndex], startAt);
+  envelope.gain.setValueAtTime(0.0001, startAt);
+  envelope.gain.exponentialRampToValueAtTime(0.022, startAt + 0.08);
+  envelope.gain.exponentialRampToValueAtTime(0.0001, startAt + 0.86);
+  note.connect(envelope);
+  envelope.connect(audioContext.destination);
+  note.start(startAt);
+  note.stop(startAt + 0.88);
+  melodyIndex = (melodyIndex + 1) % melody.length;
+  musicTimer = window.setTimeout(playMelodyNote, 720);
+}
+
+musicToggle.addEventListener('click', async () => {
+  if (!audioContext) {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextClass) return;
+    audioContext = new AudioContextClass();
+  }
+  if (musicEnabled) {
+    musicEnabled = false;
+    window.clearTimeout(musicTimer);
+    musicIcon.textContent = '♫';
+    musicLabel.textContent = 'Nhạc';
+    musicToggle.setAttribute('aria-pressed', 'false');
+    musicToggle.setAttribute('aria-label', 'Bật nhạc nền');
+    return;
+  }
+  await audioContext.resume();
+  musicEnabled = true;
+  musicIcon.textContent = '♪';
+  musicLabel.textContent = 'Đang phát';
+  musicToggle.setAttribute('aria-pressed', 'true');
+  musicToggle.setAttribute('aria-label', 'Tắt nhạc nền');
+  playMelodyNote();
 });
 
 const letterIntro = document.querySelector('#letterIntro');
